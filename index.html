@@ -1131,15 +1131,15 @@ async function generateWord() {
         };
 
         // โหลด template
-        const content = await fetch(WORD_BASE64.replace('data:@file/vnd.openxmlformats-officedocument.wordprocessingml.document;base64,', ''))
-            .then(res => res.text())
-            .catch(() => WORD_BASE64.split(',')[1]);
-        
-        const zip = new PizZip(atob(content));
-        const doc = new docxtemplater(zip, {
-            paragraphLoop: true,
-            linebreaks: true
-        });
+const response = await fetch(WORD_BASE64);
+const arrayBuffer = await response.arrayBuffer();
+
+const zip = new PizZip(arrayBuffer);
+const doc = new docxtemplater(zip, {
+    paragraphLoop: true,
+    linebreaks: true
+});
+
 
         // ใส่ข้อมูล
         doc.render(data);
