@@ -1,1610 +1,277 @@
-```html
 <!DOCTYPE html>
 <html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ศึกดวลคณิต Pink Battle Arena</title>
+    <title>PINK_X : THE CORE BREACH</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root {
+            --pink: #ff007f;
+            --dark-pink: #4d0026;
+            --black: #0a0a0a;
+            --glow: 0 0 10px #ff007f, 0 0 20px #ff007f;
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 25%, #e8d5ff 50%, #d5e8ff 75%, #ffd5e5 100%);
-            background-size: 400% 400%;
-            animation: gradientShift 15s ease infinite;
-            overflow: hidden;
-            user-select: none;
-        }
-
-        @keyframes gradientShift {
-            0%, 100% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-        }
-
-        .sparkles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        .sparkle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: radial-gradient(circle, #fff, #ffb6d9);
-            border-radius: 50%;
-            opacity: 0;
-            animation: sparkleFloat 3s ease-in-out infinite;
-        }
-
-        @keyframes sparkleFloat {
-            0%, 100% { opacity: 0; transform: translateY(0) scale(0); }
-            50% { opacity: 1; transform: translateY(-30px) scale(1); }
-        }
-
-        .container {
-            position: relative;
-            z-index: 2;
-            width: 100%;
+            background-color: var(--black);
+            color: var(--pink);
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .screen {
-            display: none;
-            width: 100%;
-            max-width: 800px;
-            animation: fadeIn 0.3s ease;
-        }
-
-        .screen.active {
-            display: block;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .game-title {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .game-title h1 {
-            font-size: clamp(32px, 6vw, 56px);
-            background: linear-gradient(135deg, #ff6eb7, #a855f7, #60a5fa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            text-shadow: 0 4px 20px rgba(255, 110, 183, 0.3);
-            font-weight: bold;
-            margin-bottom: 10px;
-            animation: titleGlow 2s ease-in-out infinite;
-        }
-
-        @keyframes titleGlow {
-            0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 110, 183, 0.5)); }
-            50% { filter: drop-shadow(0 0 20px rgba(255, 110, 183, 0.8)); }
-        }
-
-        .menu-buttons {
-            display: grid;
-            gap: 15px;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #ff8ec6, #ffb6d9);
-            border: none;
-            padding: 18px 30px;
-            border-radius: 25px;
-            color: white;
-            font-size: clamp(16px, 3vw, 20px);
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 8px 20px rgba(255, 110, 183, 0.4);
-            transition: all 0.3s ease;
-            position: relative;
+            margin: 0;
             overflow: hidden;
-            text-align: left;
+            text-transform: uppercase;
         }
 
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(255, 110, 183, 0.6);
-        }
-
-        .btn:active {
-            transform: scale(0.95);
-        }
-
-        .btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .btn:active::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .btn-icon {
-            margin-right: 10px;
-            font-size: 1.2em;
-        }
-
-        .back-btn {
-            background: linear-gradient(135deg, #a8a8a8, #d0d0d0);
-            padding: 12px 25px;
-            margin-bottom: 20px;
-            display: inline-block;
-            font-size: 16px;
-        }
-
-        .selection-screen {
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 30px;
-            box-shadow: 0 10px 40px rgba(255, 110, 183, 0.3);
-        }
-
-        .selection-title {
-            text-align: center;
-            color: #ff6eb7;
-            font-size: clamp(24px, 4vw, 32px);
-            margin-bottom: 30px;
-            font-weight: bold;
-        }
-
-        .option-group {
-            margin-bottom: 25px;
-        }
-
-        .option-label {
-            color: #8b5cf6;
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 12px;
-            display: block;
-        }
-
-        .option-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 10px;
-        }
-
-        .option-btn {
-            background: white;
-            border: 3px solid #ffb6d9;
-            padding: 15px;
-            border-radius: 20px;
-            color: #ff6eb7;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .option-btn:hover {
-            background: #ffe0f0;
-            transform: scale(1.05);
-        }
-
-        .option-btn.selected {
-            background: linear-gradient(135deg, #ff8ec6, #ffb6d9);
-            color: white;
-            border-color: #ff6eb7;
-            box-shadow: 0 5px 15px rgba(255, 110, 183, 0.5);
-        }
-
-        .start-game-btn {
-            width: 100%;
-            margin-top: 20px;
-            background: linear-gradient(135deg, #a855f7, #ff6eb7);
-            font-size: 22px;
-            padding: 20px;
-        }
-
-        .game-arena {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #ffeef8 0%, #ffe0f0 50%, #e8d5ff 100%);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .game-header {
-            display: flex;
-            justify-content: space-between;
-            padding: 15px 20px;
-            background: rgba(255, 255, 255, 0.5);
-            backdrop-filter: blur(10px);
-        }
-
-        .player-info {
-            flex: 1;
-            text-align: center;
-        }
-
-        .player-name {
-            color: #ff6eb7;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .hp-bar {
-            width: 100%;
-            height: 25px;
-            background: rgba(255, 255, 255, 0.5);
-            border-radius: 15px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
-        }
-
-        .hp-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff6eb7, #ff8ec6);
-            transition: width 0.5s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 14px;
-        }
-
-        .combo-display {
-            color: #a855f7;
-            font-weight: bold;
-            margin-top: 5px;
-            font-size: 14px;
-        }
-
-        .question-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .question-box {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 25px;
-            padding: 30px;
-            max-width: 600px;
-            width: 100%;
-            box-shadow: 0 10px 40px rgba(255, 110, 183, 0.3);
-            text-align: center;
-        }
-
-        .question-text {
-            font-size: clamp(24px, 5vw, 36px);
-            color: #8b5cf6;
-            font-weight: bold;
-            margin-bottom: 30px;
-        }
-
-        .answers-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .answer-btn {
-            background: white;
-            border: 3px solid #ffb6d9;
-            padding: 20px;
-            border-radius: 20px;
-            font-size: clamp(18px, 4vw, 24px);
-            font-weight: bold;
-            color: #ff6eb7;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .answer-btn:hover {
-            background: #ffe0f0;
-            transform: scale(1.05);
-        }
-
-        .answer-btn:active {
-            transform: scale(0.95);
-        }
-
-        .answer-btn.correct {
-            background: linear-gradient(135deg, #86efac, #4ade80);
-            border-color: #22c55e;
-            color: white;
-        }
-
-        .answer-btn.wrong {
-            background: linear-gradient(135deg, #fca5a5, #f87171);
-            border-color: #ef4444;
-            color: white;
-        }
-
-        .timer-display {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 72px;
-            font-weight: bold;
-            color: rgba(255, 110, 183, 0.3);
-            pointer-events: none;
-        }
-
-        .damage-number {
-            position: fixed;
-            font-size: 48px;
-            font-weight: bold;
-            color: #ff6eb7;
-            animation: damageFloat 1s ease-out forwards;
-            pointer-events: none;
-            text-shadow: 0 0 10px rgba(255, 110, 183, 0.8);
-        }
-
-        @keyframes damageFloat {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            100% { opacity: 0; transform: translateY(-100px) scale(1.5); }
-        }
-
-        .game-over-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .game-over-screen.active {
-            display: flex;
-        }
-
-        .game-over-box {
-            background: white;
-            border-radius: 30px;
-            padding: 40px;
-            text-align: center;
-            max-width: 500px;
+        #terminal {
             width: 90%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 600px;
+            background: rgba(10, 10, 10, 0.9);
+            border: 2px solid var(--pink);
+            padding: 20px;
+            box-shadow: var(--glow);
+            position: relative;
         }
 
-        .game-over-title {
-            font-size: 42px;
-            color: #ff6eb7;
+        .header {
+            border-bottom: 1px solid var(--pink);
+            margin-bottom: 15px;
+            padding-bottom: 5px;
             font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-bar {
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            color: #ffb3d9;
+        }
+
+        #display-area {
+            min-height: 150px;
             margin-bottom: 20px;
         }
 
-        .stats-display {
-            background: #ffeef8;
-            border-radius: 20px;
-            padding: 20px;
-            margin: 20px 0;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px solid #ffb6d9;
-            color: #8b5cf6;
-            font-weight: bold;
-        }
-
-        .stat-row:last-child {
-            border-bottom: none;
-        }
-
-        @media (max-width: 768px) {
-            .answers-grid {
-                gap: 10px;
-            }
-            
-            .answer-btn {
-                padding: 15px;
-                font-size: 18px;
-            }
-
-            .game-header {
-                flex-direction: column;
-                gap: 10px;
-            }
-        }
-
-        .help-screen {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 30px;
-            max-width: 700px;
-            margin: 0 auto;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .help-section {
-            margin-bottom: 25px;
-        }
-
-        .help-section h3 {
-            color: #ff6eb7;
-            font-size: 22px;
-            margin-bottom: 10px;
-        }
-
-        .help-section p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 8px;
-        }
-
-        .settings-screen {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 30px;
-            max-width: 500px;
-            margin: 0 auto;
-        }
-
-        .setting-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px;
-            background: #ffeef8;
-            border-radius: 15px;
-            margin-bottom: 15px;
-        }
-
-        .setting-label {
-            color: #8b5cf6;
-            font-weight: bold;
-            font-size: 18px;
-        }
-
-        .toggle-switch {
-            width: 60px;
-            height: 30px;
-            background: #ccc;
-            border-radius: 15px;
-            position: relative;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-
-        .toggle-switch.active {
-            background: linear-gradient(135deg, #ff8ec6, #ffb6d9);
-        }
-
-        .toggle-slider {
-            width: 26px;
-            height: 26px;
-            background: white;
-            border-radius: 50%;
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            transition: transform 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-
-        .toggle-switch.active .toggle-slider {
-            transform: translateX(30px);
-        }
-
-        .stats-screen {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 30px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .rank-display {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .rank-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            padding: 20px 40px;
-            border-radius: 25px;
-            font-size: 32px;
-            font-weight: bold;
-            color: #8b5cf6;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4);
+        .task-box {
+            background: var(--dark-pink);
+            padding: 15px;
+            border-left: 5px solid var(--pink);
+            font-size: 1.5rem;
             margin: 10px 0;
-        }
-
-        .rating-display {
-            font-size: 24px;
-            color: #ff6eb7;
-            font-weight: bold;
-        }
-
-        .character-sprite {
-            position: absolute;
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ff8ec6, #a855f7);
-            bottom: 100px;
-            animation: characterBounce 2s ease-in-out infinite;
-        }
-
-        @keyframes characterBounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-        }
-
-        .character-left {
-            left: 50px;
-        }
-
-        .character-right {
-            right: 50px;
-        }
-
-        .multiplayer-setup {
-            background: rgba(255, 255, 255, 0.9);
-            backdrop-filter: blur(10px);
-            border-radius: 30px;
-            padding: 30px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .player-count-selector {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .count-btn {
-            width: 80px;
-            height: 80px;
-            background: white;
-            border: 3px solid #ffb6d9;
-            border-radius: 20px;
-            font-size: 32px;
-            font-weight: bold;
-            color: #ff6eb7;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .count-btn:hover {
-            transform: scale(1.1);
-        }
-
-        .count-btn.selected {
-            background: linear-gradient(135deg, #ff8ec6, #ffb6d9);
-            color: white;
-            border-color: #ff6eb7;
-        }
-
-        .survival-mode {
             text-align: center;
         }
 
-        .survival-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
+        input {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--pink);
+            color: var(--pink);
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.5rem;
+            width: 100%;
+            outline: none;
+            text-align: center;
         }
 
-        .survival-stat-box {
-            background: rgba(255, 255, 255, 0.8);
-            padding: 20px;
-            border-radius: 20px;
-            border: 3px solid #ffb6d9;
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
         }
 
-        .survival-stat-value {
-            font-size: 36px;
-            font-weight: bold;
-            color: #ff6eb7;
+        #timer-bar {
+            height: 5px;
+            background: var(--pink);
+            width: 100%;
+            transition: width 0.1s linear;
         }
 
-        .survival-stat-label {
-            color: #8b5cf6;
-            margin-top: 5px;
+        .hp-heart { color: var(--pink); }
+        .lost { color: #333; }
+
+        .glitch {
+            animation: glitch 0.3s infinite;
+        }
+
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(-2px, -2px); }
+            60% { transform: translate(2px, 2px); }
+            80% { transform: translate(2px, -2px); }
+            100% { transform: translate(0); }
         }
     </style>
 </head>
 <body>
-    <div class="sparkles" id="sparkles"></div>
+
+<div id="terminal">
+    <div class="header">
+        <span>> PINK_X_OS v1.0.4</span>
+        <span id="level-display">LVL: 01</span>
+    </div>
     
-    <div class="container">
-        <!-- Main Menu -->
-        <div class="screen active" id="mainMenu">
-            <div class="game-title">
-                <h1>ศึกดวลคณิต<br>Pink Battle Arena</h1>
-            </div>
-            <div class="menu-buttons">
-                <button class="btn" onclick="game.showScreen('soloSetup')">
-                    <span class="btn-icon">🎮</span> เล่นคนเดียว
-                </button>
-                <button class="btn" onclick="game.showScreen('multiplayerSetup')">
-                    <span class="btn-icon">👥</span> เล่นกับเพื่อน
-                </button>
-                <button class="btn" onclick="game.showScreen('survivalSetup')">
-                    <span class="btn-icon">🏆</span> โหมดเอาตัวรอด
-                </button>
-                <button class="btn" onclick="game.showScreen('stats')">
-                    <span class="btn-icon">📊</span> สถิติของฉัน
-                </button>
-                <button class="btn" onclick="game.showScreen('settings')">
-                    <span class="btn-icon">⚙</span> ตั้งค่า
-                </button>
-                <button class="btn" onclick="game.showScreen('help')">
-                    <span class="btn-icon">❓</span> วิธีเล่น
-                </button>
-            </div>
-        </div>
+    <div class="status-bar" id="status-text">
+        [ SYSTEM STATUS: READY TO INJECT ]
+    </div>
 
-        <!-- Solo Mode Setup -->
-        <div class="screen" id="soloSetup">
-            <div class="selection-screen">
-                <button class="btn back-btn" onclick="game.showScreen('mainMenu')">
-                    🔙 ย้อนกลับ
-                </button>
-                <h2 class="selection-title">ตั้งค่าเกมคนเดียว</h2>
-                
-                <div class="option-group">
-                    <label class="option-label">ระดับ AI:</label>
-                    <div class="option-buttons">
-                        <button class="option-btn selected" data-ai="novice" onclick="game.selectAI('novice')">มือใหม่</button>
-                        <button class="option-btn" data-ai="medium" onclick="game.selectAI('medium')">ปานกลาง</button>
-                        <button class="option-btn" data-ai="pro" onclick="game.selectAI('pro')">โปร</button>
-                        <button class="option-btn" data-ai="legend" onclick="game.selectAI('legend')">ตำนาน</button>
-                    </div>
-                </div>
-
-                <div class="option-group">
-                    <label class="option-label">ระดับคณิต:</label>
-                    <div class="option-buttons">
-                        <button class="option-btn selected" data-math="elementary" onclick="game.selectMath('elementary')">ประถม</button>
-                        <button class="option-btn" data-math="middle" onclick="game.selectMath('middle')">มัธยมต้น</button>
-                        <button class="option-btn" data-math="high" onclick="game.selectMath('high')">มัธยมปลาย</button>
-                    </div>
-                </div>
-
-                <button class="btn start-game-btn" onclick="game.startSoloGame()">
-                    เริ่มเกม! 🎮
-                </button>
-            </div>
-        </div>
-
-        <!-- Multiplayer Setup -->
-        <div class="screen" id="multiplayerSetup">
-            <div class="multiplayer-setup">
-                <button class="btn back-btn" onclick="game.showScreen('mainMenu')">
-                    🔙 ย้อนกลับ
-                </button>
-                <h2 class="selection-title">เล่นกับเพื่อน</h2>
-                
-                <div class="option-group">
-                    <label class="option-label">จำนวนผู้เล่น:</label>
-                    <div class="player-count-selector">
-                        <button class="count-btn selected" onclick="game.selectPlayerCount(2)">2</button>
-                        <button class="count-btn" onclick="game.selectPlayerCount(3)">3</button>
-                        <button class="count-btn" onclick="game.selectPlayerCount(4)">4</button>
-                    </div>
-                </div>
-
-                <div class="option-group">
-                    <label class="option-label">ระดับคณิต:</label>
-                    <div class="option-buttons">
-                        <button class="option-btn selected" data-math="elementary" onclick="game.selectMath('elementary')">ประถม</button>
-                        <button class="option-btn" data-math="middle" onclick="game.selectMath('middle')">มัธยมต้น</button>
-                        <button class="option-btn" data-math="high" onclick="game.selectMath('high')">มัธยมปลาย</button>
-                    </div>
-                </div>
-
-                <button class="btn start-game-btn" onclick="game.startMultiplayerGame()">
-                    เริ่มเกม! 👥
-                </button>
-            </div>
-        </div>
-
-        <!-- Survival Mode Setup -->
-        <div class="screen" id="survivalSetup">
-            <div class="selection-screen">
-                <button class="btn back-btn" onclick="game.showScreen('mainMenu')">
-                    🔙 ย้อนกลับ
-                </button>
-                <h2 class="selection-title">โหมดเอาตัวรอด</h2>
-                
-                <div class="survival-mode">
-                    <p style="color: #8b5cf6; font-size: 18px; margin-bottom: 20px;">
-                        ตอบคำถามให้ถูกต้องมากที่สุด!<br>
-                        หากตอบผิด HP จะลดลง<br>
-                        เกมจบเมื่อ HP หมด
-                    </p>
-
-                    <div class="option-group">
-                        <label class="option-label">ระดับคณิต:</label>
-                        <div class="option-buttons">
-                            <button class="option-btn selected" data-math="elementary" onclick="game.selectMath('elementary')">ประถม</button>
-                            <button class="option-btn" data-math="middle" onclick="game.selectMath('middle')">มัธยมต้น</button>
-                            <button class="option-btn" data-math="high" onclick="game.selectMath('high')">มัธยมปลาย</button>
-                        </div>
-                    </div>
-
-                    <button class="btn start-game-btn" onclick="game.startSurvivalGame()">
-                        เริ่มท้าทาย! 🏆
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats Screen -->
-        <div class="screen" id="stats">
-            <div class="stats-screen">
-                <button class="btn back-btn" onclick="game.showScreen('mainMenu')">
-                    🔙 ย้อนกลับ
-                </button>
-                <h2 class="selection-title">สถิติของฉัน</h2>
-                
-                <div class="rank-display">
-                    <div class="rank-badge" id="rankBadge">ฝึกหัด</div>
-                    <div class="rating-display" id="ratingDisplay">คะแนน: 1000</div>
-                </div>
-
-                <div class="stats-display">
-                    <div class="stat-row">
-                        <span>ชนะ:</span>
-                        <span id="statWins">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>แพ้:</span>
-                        <span id="statLosses">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>แมตช์ทั้งหมด:</span>
-                        <span id="statTotal">0</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>ความแม่นยำ:</span>
-                        <span id="statAccuracy">0%</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>เวลาเฉลี่ย:</span>
-                        <span id="statAvgTime">0s</span>
-                    </div>
-                    <div class="stat-row">
-                        <span>คอมโบสูงสุด:</span>
-                        <span id="statMaxCombo">0</span>
-                    </div>
-                </div>
-
-                <button class="btn" style="width: 100%; margin-top: 20px;" onclick="game.resetStats()">
-                    รีเซ็ตสถิติ
-                </button>
-            </div>
-        </div>
-
-        <!-- Settings Screen -->
-        <div class="screen" id="settings">
-            <div class="settings-screen">
-                <button class="btn back-btn" onclick="game.showScreen('mainMenu')">
-                    🔙 ย้อนกลับ
-                </button>
-                <h2 class="selection-title">ตั้งค่า</h2>
-                
-                <div class="setting-row">
-                    <span class="setting-label">🔊 เสียง</span>
-                    <div class="toggle-switch active" id="soundToggle" onclick="game.toggleSound()">
-                        <div class="toggle-slider"></div>
-                    </div>
-                </div>
-
-                <div class="setting-row">
-                    <span class="setting-label">✨ เอฟเฟกต์</span>
-                    <div class="toggle-switch active" id="effectToggle" onclick="game.toggleEffects()">
-                        <div class="toggle-slider"></div>
-                    </div>
-                </div>
-
-                <div class="setting-row">
-                    <span class="setting-label">🎁 ไอเทม</span>
-                    <div class="toggle-switch active" id="itemToggle" onclick="game.toggleItems()">
-                        <div class="toggle-slider"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Help Screen -->
-        <div class="screen" id="help">
-            <div class="help-screen">
-                <button class="btn back-btn" onclick="game.showScreen('mainMenu')">
-                    🔙 ย้อนกลับ
-                </button>
-                <h2 class="selection-title">วิธีเล่น</h2>
-                
-                <div class="help-section">
-                    <h3>🎯 เป้าหมาย</h3>
-                    <p>ตอบคำถามคณิตศาสตร์ให้ถูกต้องและรวดเร็วเพื่อโจมตีคู่ต่อสู้</p>
-                </div>
-
-                <div class="help-section">
-                    <h3>⚔ การต่อสู้</h3>
-                    <p>• ตอบถูก = โจมตีคู่ต่อสู้</p>
-                    <p>• ตอบผิด = เสีย HP ของตัวเอง</p>
-                    <p>• ตอบเร็ว = ดาเมจเพิ่ม</p>
-                    <p>• สร้าง Combo = ดาเมจมากขึ้น</p>
-                </div>
-
-                <div class="help-section">
-                    <h3>💗 ระบบ HP</h3>
-                    <p>• HP เริ่มต้น: 100</p>
-                    <p>• ดาเมจพื้นฐาน: 10-20</p>
-                    <p>• ชนะเมื่อ HP ของคู่ต่อสู้เป็น 0</p>
-                </div>
-
-                <div class="help-section">
-                    <h3>🔥 ระบบ Combo</h3>
-                    <p>• ตอบถูกติดต่อกัน = Combo เพิ่ม</p>
-                    <p>• Combo 5 = Critical Hit!</p>
-                    <p>• ตอบผิด = Combo รีเซ็ต</p>
-                </div>
-
-                <div class="help-section">
-                    <h3>🎮 โหมดเกม</h3>
-                    <p><strong>เล่นคนเดียว:</strong> ต่อสู้กับ AI 4 ระดับ</p>
-                    <p><strong>เล่นกับเพื่อน:</strong> เล่น 2-4 คน บนเครื่องเดียว</p>
-                    <p><strong>เอาตัวรอด:</strong> ตอบคำถามต่อเนื่องจนกว่า HP จะหมด</p>
-                </div>
-
-                <div class="help-section">
-                    <h3>🏆 ระบบอันดับ</h3>
-                    <p>ฝึกหัด → นักสู้ → นักคิดเร็ว → จอมเวท → แชมป์ → ตำนาน</p>
-                    <p>ชนะ +15 คะแนน | แพ้ -10 คะแนน</p>
-                </div>
-            </div>
+    <div id="display-area">
+        <div id="msg">ยินดีต้อนรับเข้าสู่ Mainframe 01... เตรียมรับ Code ชุดแรก!</div>
+        <div class="task-box" id="question-box">READY?</div>
+        <div id="timer-container">
+            <div id="timer-bar"></div>
         </div>
     </div>
 
-    <!-- Game Arena (Hidden initially) -->
-    <div class="game-arena" id="gameArena" style="display: none;">
-        <div class="game-header" id="gameHeader"></div>
-        <div class="question-area">
-            <div class="question-box">
-                <div class="timer-display" id="timerDisplay"></div>
-                <div class="question-text" id="questionText">2 + 2 = ?</div>
-                <div class="answers-grid" id="answersGrid"></div>
-            </div>
-        </div>
-        <div class="character-sprite character-left" id="charLeft"></div>
-        <div class="character-sprite character-right" id="charRight"></div>
+    <input type="number" id="ans-input" placeholder="DECRYPT HERE..." autofocus>
+
+    <div class="stats">
+        <div>HP: <span id="hp-display">💗💗💗</span></div>
+        <div>COMBO: x<span id="combo-display">0</span></div>
     </div>
+</div>
 
-    <!-- Game Over Screen -->
-    <div class="game-over-screen" id="gameOverScreen">
-        <div class="game-over-box">
-            <div class="game-over-title" id="gameOverTitle">ชนะ!</div>
-            <div class="stats-display">
-                <div class="stat-row">
-                    <span>ความแม่นยำ:</span>
-                    <span id="finalAccuracy">0%</span>
-                </div>
-                <div class="stat-row">
-                    <span>เวลาเฉลี่ย:</span>
-                    <span id="finalAvgTime">0s</span>
-                </div>
-                <div class="stat-row">
-                    <span>คอมโบสูงสุด:</span>
-                    <span id="finalMaxCombo">0</span>
-                </div>
-                <div class="stat-row">
-                    <span>คำตอบถูก:</span>
-                    <span id="finalCorrect">0</span>
-                </div>
-            </div>
-            <button class="btn" style="width: 100%; margin-top: 20px;" onclick="game.showScreen('mainMenu')">
-                กลับเมนู
-            </button>
-            <button class="btn start-game-btn" onclick="game.playAgain()">
-                เล่นอีกครั้ง
-            </button>
-        </div>
-    </div>
+<script>
+    let level = 1;
+    let hp = 3;
+    let combo = 0;
+    let currentAns = 0;
+    let timeLeft = 10;
+    let timerInterval;
+    let gameActive = false;
 
-    <script>
-        // Game Engine
-        class Game {
-            constructor() {
-                this.currentScreen = 'mainMenu';
-                this.settings = {
-                    sound: true,
-                    effects: true,
-                    items: true
-                };
-                this.gameMode = null;
-                this.aiLevel = 'novice';
-                this.mathLevel = 'elementary';
-                this.playerCount = 2;
-                this.combat = null;
-                this.stats = this.loadStats();
-                this.initSparkles();
-                this.loadSettings();
-            }
+    const questionBox = document.getElementById('question-box');
+    const ansInput = document.getElementById('ans-input');
+    const hpDisplay = document.getElementById('hp-display');
+    const comboDisplay = document.getElementById('combo-display');
+    const levelDisplay = document.getElementById('level-display');
+    const statusText = document.getElementById('status-text');
+    const timerBar = document.getElementById('timer-bar');
 
-            initSparkles() {
-                const sparklesContainer = document.getElementById('sparkles');
-                for (let i = 0; i < 20; i++) {
-                    const sparkle = document.createElement('div');
-                    sparkle.className = 'sparkle';
-                    sparkle.style.left = Math.random() * 100 + '%';
-                    sparkle.style.top = Math.random() * 100 + '%';
-                    sparkle.style.animationDelay = Math.random() * 3 + 's';
-                    sparklesContainer.appendChild(sparkle);
-                }
-            }
+    function generateTask() {
+        let modes = ['overclock'];
+        if (level >= 3) modes.push('root');
+        if (level >= 5) modes.push('binary', 'modular');
+        
+        let mode = modes[Math.floor(Math.random() * modes.length)];
+        let qText = "";
+        
+        // Adaptive Difficulty
+        let maxNum = level * 5 + 10;
+        let timeLimit = level <= 5 ? 10 : (level <= 10 ? 7 : 5);
 
-            showScreen(screenId) {
-                document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-                document.getElementById(screenId).classList.add('active');
-                this.currentScreen = screenId;
-
-                if (screenId === 'stats') {
-                    this.updateStatsDisplay();
-                }
-            }
-
-            selectAI(level) {
-                this.aiLevel = level;
-                document.querySelectorAll('[data-ai]').forEach(btn => btn.classList.remove('selected'));
-                document.querySelector(`[data-ai="${level}"]`).classList.add('selected');
-            }
-
-            selectMath(level) {
-                this.mathLevel = level;
-                document.querySelectorAll('[data-math]').forEach(btn => btn.classList.remove('selected'));
-                document.querySelector(`[data-math="${level}"]`).classList.add('selected');
-            }
-
-            selectPlayerCount(count) {
-                this.playerCount = count;
-                document.querySelectorAll('.count-btn').forEach(btn => btn.classList.remove('selected'));
-                event.target.classList.add('selected');
-            }
-
-            startSoloGame() {
-                this.gameMode = 'solo';
-                const player = new Player('คุณ', 100, false);
-                const ai = new AIPlayer('AI', 100, true, this.aiLevel);
-                this.combat = new Combat([player, ai], this.mathLevel, this.gameMode);
-                this.combat.start();
-            }
-
-            startMultiplayerGame() {
-                this.gameMode = 'multiplayer';
-                const players = [];
-                const colors = ['#ff6eb7', '#a855f7', '#60a5fa', '#34d399'];
-                for (let i = 0; i < this.playerCount; i++) {
-                    players.push(new Player(`ผู้เล่น ${i + 1}`, 100, false, colors[i]));
-                }
-                this.combat = new Combat(players, this.mathLevel, this.gameMode);
-                this.combat.start();
-            }
-
-            startSurvivalGame() {
-                this.gameMode = 'survival';
-                const player = new Player('คุณ', 100, false);
-                this.combat = new Combat([player], this.mathLevel, this.gameMode);
-                this.combat.start();
-            }
-
-            playAgain() {
-                document.getElementById('gameOverScreen').classList.remove('active');
-                if (this.gameMode === 'solo') {
-                    this.startSoloGame();
-                } else if (this.gameMode === 'multiplayer') {
-                    this.startMultiplayerGame();
-                } else if (this.gameMode === 'survival') {
-                    this.startSurvivalGame();
-                }
-            }
-
-            toggleSound() {
-                this.settings.sound = !this.settings.sound;
-                document.getElementById('soundToggle').classList.toggle('active');
-                this.saveSettings();
-            }
-
-            toggleEffects() {
-                this.settings.effects = !this.settings.effects;
-                document.getElementById('effectToggle').classList.toggle('active');
-                this.saveSettings();
-            }
-
-            toggleItems() {
-                this.settings.items = !this.settings.items;
-                document.getElementById('itemToggle').classList.toggle('active');
-                this.saveSettings();
-            }
-
-            saveSettings() {
-                localStorage.setItem('gameSettings', JSON.stringify(this.settings));
-            }
-
-            loadSettings() {
-                const saved = localStorage.getItem('gameSettings');
-                if (saved) {
-                    this.settings = JSON.parse(saved);
-                    document.getElementById('soundToggle').classList.toggle('active', this.settings.sound);
-                    document.getElementById('effectToggle').classList.toggle('active', this.settings.effects);
-                    document.getElementById('itemToggle').classList.toggle('active', this.settings.items);
-                }
-            }
-
-            loadStats() {
-                const saved = localStorage.getItem('gameStats');
-                return saved ? JSON.parse(saved) : {
-                    wins: 0,
-                    losses: 0,
-                    totalMatches: 0,
-                    totalCorrect: 0,
-                    totalAnswered: 0,
-                    totalTime: 0,
-                    maxCombo: 0,
-                    rating: 1000
-                };
-            }
-
-            saveStats() {
-                localStorage.setItem('gameStats', JSON.stringify(this.stats));
-            }
-
-            updateStats(result) {
-                this.stats.totalMatches++;
-                if (result.won) {
-                    this.stats.wins++;
-                    this.stats.rating += 15;
+        switch(mode) {
+            case 'binary':
+                let b1 = Math.floor(Math.random() * 10);
+                let b2 = Math.floor(Math.random() * 5);
+                qText = `[BINARY PULSE] ${b1.toString(2)} + ${b2.toString(2)} (BASE 10)`;
+                currentAns = b1 + b2;
+                break;
+            case 'root':
+                let r = Math.floor(Math.random() * 15) + 2;
+                if(Math.random() > 0.5) {
+                    qText = `[SQUARE ROOT VIRUS] √${r*r}`;
+                    currentAns = r;
                 } else {
-                    this.stats.losses++;
-                    this.stats.rating = Math.max(0, this.stats.rating - 10);
+                    qText = `[OVERCLOCK POWER] ${r}^2`;
+                    currentAns = r*r;
                 }
-                this.stats.totalCorrect += result.correct;
-                this.stats.totalAnswered += result.total;
-                this.stats.totalTime += result.totalTime;
-                this.stats.maxCombo = Math.max(this.stats.maxCombo, result.maxCombo);
-                this.saveStats();
-            }
-
-            updateStatsDisplay() {
-                const accuracy = this.stats.totalAnswered > 0 
-                    ? ((this.stats.totalCorrect / this.stats.totalAnswered) * 100).toFixed(1) 
-                    : 0;
-                const avgTime = this.stats.totalAnswered > 0 
-                    ? (this.stats.totalTime / this.stats.totalAnswered).toFixed(2) 
-                    : 0;
-
-                document.getElementById('statWins').textContent = this.stats.wins;
-                document.getElementById('statLosses').textContent = this.stats.losses;
-                document.getElementById('statTotal').textContent = this.stats.totalMatches;
-                document.getElementById('statAccuracy').textContent = accuracy + '%';
-                document.getElementById('statAvgTime').textContent = avgTime + 's';
-                document.getElementById('statMaxCombo').textContent = this.stats.maxCombo;
-                document.getElementById('ratingDisplay').textContent = 'คะแนน: ' + this.stats.rating;
-                document.getElementById('rankBadge').textContent = this.getRank();
-            }
-
-            getRank() {
-                const r = this.stats.rating;
-                if (r < 1100) return 'ฝึกหัด';
-                if (r < 1300) return 'นักสู้';
-                if (r < 1500) return 'นักคิดเร็ว';
-                if (r < 1700) return 'จอมเวท';
-                if (r < 2000) return 'แชมป์';
-                return 'ตำนาน';
-            }
-
-            resetStats() {
-                if (confirm('ยืนยันการรีเซ็ตสถิติ?')) {
-                    this.stats = {
-                        wins: 0,
-                        losses: 0,
-                        totalMatches: 0,
-                        totalCorrect: 0,
-                        totalAnswered: 0,
-                        totalTime: 0,
-                        maxCombo: 0,
-                        rating: 1000
-                    };
-                    this.saveStats();
-                    this.updateStatsDisplay();
-                }
-            }
-        }
-
-        // Player Class
-        class Player {
-            constructor(name, hp, isAI, color = '#ff6eb7') {
-                this.name = name;
-                this.maxHP = hp;
-                this.hp = hp;
-                this.isAI = isAI;
-                this.combo = 0;
-                this.color = color;
-            }
-
-            takeDamage(amount) {
-                this.hp = Math.max(0, this.hp - amount);
-                return this.hp <= 0;
-            }
-
-            resetCombo() {
-                this.combo = 0;
-            }
-
-            increaseCombo() {
-                this.combo++;
-            }
-        }
-
-        // AI Player
-        class AIPlayer extends Player {
-            constructor(name, hp, isAI, level) {
-                super(name, hp, isAI);
-                this.level = level;
-                this.config = this.getConfig();
-            }
-
-            getConfig() {
-                const configs = {
-                    novice: { minDelay: 2000, maxDelay: 3000, accuracy: 0.60 },
-                    medium: { minDelay: 1500, maxDelay: 2000, accuracy: 0.75 },
-                    pro: { minDelay: 1000, maxDelay: 1500, accuracy: 0.85 },
-                    legend: { minDelay: 700, maxDelay: 1000, accuracy: 0.92 }
-                };
-                return configs[this.level];
-            }
-
-            makeDecision(correctIndex, totalOptions) {
-                return new Promise(resolve => {
-                    const delay = this.config.minDelay + Math.random() * (this.config.maxDelay - this.config.minDelay);
-                    setTimeout(() => {
-                        const willBeCorrect = Math.random() < this.config.accuracy;
-                        const answer = willBeCorrect ? correctIndex : Math.floor(Math.random() * totalOptions);
-                        resolve({ answer, time: delay / 1000 });
-                    }, delay);
-                });
-            }
-        }
-
-        // Math Generator
-        class MathGenerator {
-            constructor(level) {
-                this.level = level;
-                this.lastQuestion = null;
-            }
-
-            generate() {
-                let question;
-                do {
-                    question = this.generateByLevel();
-                } while (this.lastQuestion && question.text === this.lastQuestion.text);
-                
-                this.lastQuestion = question;
-                return question;
-            }
-
-            generateByLevel() {
-                switch (this.level) {
-                    case 'elementary':
-                        return this.generateElementary();
-                    case 'middle':
-                        return this.generateMiddle();
-                    case 'high':
-                        return this.generateHigh();
-                    default:
-                        return this.generateElementary();
-                }
-            }
-
-            generateElementary() {
-                const types = ['add', 'subtract', 'multiply', 'divide', 'percent'];
-                const type = types[Math.floor(Math.random() * types.length)];
-
-                switch (type) {
-                    case 'add': {
-                        const a = Math.floor(Math.random() * 50) + 1;
-                        const b = Math.floor(Math.random() * 50) + 1;
-                        return this.createQuestion(`${a} + ${b}`, a + b);
-                    }
-                    case 'subtract': {
-                        const a = Math.floor(Math.random() * 50) + 20;
-                        const b = Math.floor(Math.random() * (a - 1)) + 1;
-                        return this.createQuestion(`${a} - ${b}`, a - b);
-                    }
-                    case 'multiply': {
-                        const a = Math.floor(Math.random() * 12) + 1;
-                        const b = Math.floor(Math.random() * 12) + 1;
-                        return this.createQuestion(`${a} × ${b}`, a * b);
-                    }
-                    case 'divide': {
-                        const b = Math.floor(Math.random() * 10) + 2;
-                        const result = Math.floor(Math.random() * 10) + 1;
-                        const a = b * result;
-                        return this.createQuestion(`${a} ÷ ${b}`, result);
-                    }
-                    case 'percent': {
-                        const num = Math.floor(Math.random() * 10) * 10;
-                        const percent = [10, 20, 25, 50, 75][Math.floor(Math.random() * 5)];
-                        const result = (num * percent) / 100;
-                        return this.createQuestion(`${percent}% ของ ${num}`, result);
-                    }
-                }
-            }
-
-            generateMiddle() {
-                const types = ['exponent', 'linear', 'area'];
-                const type = types[Math.floor(Math.random() * types.length)];
-
-                switch (type) {
-                    case 'exponent': {
-                        const base = Math.floor(Math.random() * 5) + 2;
-                        const exp = Math.floor(Math.random() * 3) + 2;
-                        return this.createQuestion(`${base}^${exp}`, Math.pow(base, exp));
-                    }
-                    case 'linear': {
-                        const a = Math.floor(Math.random() * 5) + 1;
-                        const b = Math.floor(Math.random() * 10) + 1;
-                        const x = Math.floor(Math.random() * 5) + 1;
-                        return this.createQuestion(`${a}x + ${b} เมื่อ x = ${x}`, a * x + b);
-                    }
-                    case 'area': {
-                        const w = Math.floor(Math.random() * 10) + 3;
-                        const h = Math.floor(Math.random() * 10) + 3;
-                        return this.createQuestion(`พื้นที่สี่เหลี่ยม ${w}×${h}`, w * h);
-                    }
-                }
-            }
-
-            generateHigh() {
-                const types = ['function', 'trig', 'log'];
-                const type = types[Math.floor(Math.random() * types.length)];
-
-                switch (type) {
-                    case 'function': {
-                        const a = Math.floor(Math.random() * 3) + 1;
-                        const b = Math.floor(Math.random() * 5) + 1;
-                        const x = Math.floor(Math.random() * 5) + 1;
-                        return this.createQuestion(`f(x) = ${a}x² + ${b}, f(${x})`, a * x * x + b);
-                    }
-                    case 'trig': {
-                        const angles = [0, 30, 45, 60, 90];
-                        const values = [0, 0.5, 0.707, 0.866, 1];
-                        const idx = Math.floor(Math.random() * angles.length);
-                        return this.createQuestion(`sin(${angles[idx]}°) ≈`, values[idx]);
-                    }
-                    case 'log': {
-                        const base = [2, 10][Math.floor(Math.random() * 2)];
-                        const exp = Math.floor(Math.random() * 3) + 1;
-                        const num = Math.pow(base, exp);
-                        return this.createQuestion(`log${base}(${num})`, exp);
-                    }
-                }
-            }
-
-            createQuestion(text, answer) {
-                const wrong1 = answer + (Math.floor(Math.random() * 10) + 1) * (Math.random() < 0.5 ? 1 : -1);
-                const wrong2 = answer + (Math.floor(Math.random() * 15) + 5) * (Math.random() < 0.5 ? 1 : -1);
-                const wrong3 = answer + (Math.floor(Math.random() * 20) + 10) * (Math.random() < 0.5 ? 1 : -1);
-
-                let answers = [
-                    { text: this.formatAnswer(answer), correct: true },
-                    { text: this.formatAnswer(wrong1), correct: false },
-                    { text: this.formatAnswer(wrong2), correct: false },
-                    { text: this.formatAnswer(wrong3), correct: false }
-                ];
-
-                // Shuffle
-                for (let i = answers.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [answers[i], answers[j]] = [answers[j], answers[i]];
-                }
-
-                return { text, answers, correctAnswer: answer };
-            }
-
-            formatAnswer(num) {
-                return Math.round(num * 1000) / 1000;
-            }
-        }
-
-        // Combat System
-        class Combat {
-            constructor(players, mathLevel, gameMode) {
-                this.players = players;
-                this.mathGen = new MathGenerator(mathLevel);
-                this.gameMode = gameMode;
-                this.currentQuestion = null;
-                this.questionStartTime = 0;
-                this.stats = {
-                    correct: 0,
-                    total: 0,
-                    maxCombo: 0,
-                    totalTime: 0
-                };
-                this.survivalScore = 0;
-            }
-
-            start() {
-                document.getElementById('gameArena').style.display = 'flex';
-                document.querySelector('.container').style.display = 'none';
-                this.renderHeader();
-                this.nextQuestion();
-            }
-
-            renderHeader() {
-                const header = document.getElementById('gameHeader');
-                header.innerHTML = '';
-
-                if (this.gameMode === 'survival') {
-                    header.innerHTML = `
-                        <div class="player-info">
-                            <div class="player-name">${this.players[0].name}</div>
-                            <div class="hp-bar">
-                                <div class="hp-fill" id="hp-0" style="width: 100%">
-                                    HP: ${this.players[0].hp}/${this.players[0].maxHP}
-                                </div>
-                            </div>
-                            <div class="combo-display" id="combo-0">คอมโบ: 0</div>
-                        </div>
-                        <div class="player-info">
-                            <div class="player-name">คะแนน</div>
-                            <div style="font-size: 32px; font-weight: bold; color: #ff6eb7;" id="survivalScore">0</div>
-                        </div>
-                    `;
+                break;
+            case 'modular':
+                let n1 = Math.floor(Math.random() * 100) + 20;
+                let n2 = Math.floor(Math.random() * 9) + 2;
+                qText = `[MODULAR BREACH] ${n1} mod ${n2}`;
+                currentAns = n1 % n2;
+                break;
+            default:
+                let a = Math.floor(Math.random() * maxNum);
+                let b = Math.floor(Math.random() * maxNum);
+                let c = Math.floor(Math.random() * 10);
+                if (level < 6) {
+                    qText = `[DECRYPT] ${a} + ${b}`;
+                    currentAns = a + b;
                 } else {
-                    this.players.forEach((player, idx) => {
-                        const div = document.createElement('div');
-                        div.className = 'player-info';
-                        div.innerHTML = `
-                            <div class="player-name">${player.name}</div>
-                            <div class="hp-bar">
-                                <div class="hp-fill" id="hp-${idx}" style="width: 100%">
-                                    HP: ${player.hp}/${player.maxHP}
-                                </div>
-                            </div>
-                            <div class="combo-display" id="combo-${idx}">คอมโบ: 0</div>
-                        `;
-                        header.appendChild(div);
-                    });
+                    qText = `[OVERCLOCKED] (${a} + ${b}) - ${c}`;
+                    currentAns = (a + b) - c;
                 }
-            }
-
-            nextQuestion() {
-                this.currentQuestion = this.mathGen.generate();
-                this.questionStartTime = Date.now();
-                document.getElementById('questionText').textContent = this.currentQuestion.text + ' = ?';
-                
-                const grid = document.getElementById('answersGrid');
-                grid.innerHTML = '';
-                
-                this.currentQuestion.answers.forEach((answer, idx) => {
-                    const btn = document.createElement('button');
-                    btn.className = 'answer-btn';
-                    btn.textContent = answer.text;
-                    btn.onclick = () => this.handleAnswer(idx, answer.correct);
-                    grid.appendChild(btn);
-                });
-
-                // Handle AI players
-                if (this.gameMode === 'solo') {
-                    const correctIdx = this.currentQuestion.answers.findIndex(a => a.correct);
-                    this.players[1].makeDecision(correctIdx, this.currentQuestion.answers.length)
-                        .then(decision => {
-                            if (this.currentQuestion === this.mathGen.lastQuestion) {
-                                const isCorrect = this.currentQuestion.answers[decision.answer].correct;
-                                setTimeout(() => {
-                                    this.processAnswer(1, isCorrect, decision.time);
-                                }, 100);
-                            }
-                        });
-                }
-            }
-
-            handleAnswer(answerIdx, isCorrect) {
-                const reactionTime = (Date.now() - this.questionStartTime) / 1000;
-                this.processAnswer(0, isCorrect, reactionTime);
-            }
-
-            processAnswer(playerIdx, isCorrect, reactionTime) {
-                this.stats.total++;
-                this.stats.totalTime += reactionTime;
-
-                const player = this.players[playerIdx];
-                const buttons = document.querySelectorAll('.answer-btn');
-                
-                buttons.forEach((btn, idx) => {
-                    btn.disabled = true;
-                    if (this.currentQuestion.answers[idx].correct) {
-                        btn.classList.add('correct');
-                    }
-                });
-
-                if (isCorrect) {
-                    this.stats.correct++;
-                    player.increaseCombo();
-                    this.stats.maxCombo = Math.max(this.stats.maxCombo, player.combo);
-
-                    if (this.gameMode === 'survival') {
-                        this.survivalScore++;
-                        document.getElementById('survivalScore').textContent = this.survivalScore;
-                    } else {
-                        const damage = this.calculateDamage(reactionTime, player.combo);
-                        const targetIdx = this.gameMode === 'solo' ? (playerIdx === 0 ? 1 : 0) : (playerIdx + 1) % this.players.length;
-                        const isDead = this.players[targetIdx].takeDamage(damage);
-                        this.showDamage(damage, playerIdx === 0);
-                        this.updateHP(targetIdx);
-
-                        if (isDead) {
-                            this.endGame(playerIdx);
-                            return;
-                        }
-                    }
-                } else {
-                    buttons[this.currentQuestion.answers.findIndex((a, i) => 
-                        document.querySelectorAll('.answer-btn')[i].textContent === 
-                        this.currentQuestion.answers.find(x => !x.correct).text
-                    )]?.classList.add('wrong');
-                    
-                    player.resetCombo();
-                    const damage = 10;
-                    const isDead = player.takeDamage(damage);
-                    this.updateHP(playerIdx);
-
-                    if (isDead) {
-                        if (this.gameMode === 'survival') {
-                            this.endSurvival();
-                        } else {
-                            const winnerIdx = playerIdx === 0 ? 1 : 0;
-                            this.endGame(winnerIdx);
-                        }
-                        return;
-                    }
-                }
-
-                this.updateCombo(playerIdx);
-
-                setTimeout(() => {
-                    this.nextQuestion();
-                }, 1500);
-            }
-
-            calculateDamage(reactionTime, combo) {
-                const baseDamage = 10;
-                const speedBonus = Math.max(0, 5 - reactionTime) * 2;
-                const comboMultiplier = 1 + (combo * 0.1);
-                const isCritical = combo >= 5;
-                return Math.round((baseDamage + speedBonus) * comboMultiplier * (isCritical ? 1.5 : 1));
-            }
-
-            showDamage(damage, isPlayer) {
-                if (!game.settings.effects) return;
-                
-                const damageEl = document.createElement('div');
-                damageEl.className = 'damage-number';
-                damageEl.textContent = '-' + damage;
-                damageEl.style.left = (isPlayer ? 70 : 30) + '%';
-                damageEl.style.top = '50%';
-                document.body.appendChild(damageEl);
-
-                setTimeout(() => damageEl.remove(), 1000);
-            }
-
-            updateHP(playerIdx) {
-                const player = this.players[playerIdx];
-                const hpEl = document.getElementById(`hp-${playerIdx}`);
-                const percent = (player.hp / player.maxHP) * 100;
-                hpEl.style.width = percent + '%';
-                hpEl.textContent = `HP: ${player.hp}/${player.maxHP}`;
-            }
-
-            updateCombo(playerIdx) {
-                const combo = this.players[playerIdx].combo;
-                document.getElementById(`combo-${playerIdx}`).textContent = `คอมโบ: ${combo}`;
-            }
-
-            endGame(winnerIdx) {
-                setTimeout(() => {
-                    document.getElementById('gameArena').style.display = 'none';
-                    
-                    const won = winnerIdx === 0;
-                    document.getElementById('gameOverTitle').textContent = won ? 'ชนะ! 🎉' : 'แพ้ 😢';
-                    
-                    const accuracy = (this.stats.correct / this.stats.total * 100).toFixed(1);
-                    const avgTime = (this.stats.totalTime / this.stats.total).toFixed(2);
-                    
-                    document.getElementById('finalAccuracy').textContent = accuracy + '%';
-                    document.getElementById('finalAvgTime').textContent = avgTime + 's';
-                    document.getElementById('finalMaxCombo').textContent = this.stats.maxCombo;
-                    document.getElementById('finalCorrect').textContent = this.stats.correct;
-                    
-                    game.updateStats({
-                        won,
-                        correct: this.stats.correct,
-                        total: this.stats.total,
-                        totalTime: this.stats.totalTime,
-                        maxCombo: this.stats.maxCombo
-                    });
-                    
-                    document.getElementById('gameOverScreen').classList.add('active');
-                }, 1000);
-            }
-
-            endSurvival() {
-                setTimeout(() => {
-                    document.getElementById('gameArena').style.display = 'none';
-                    
-                    document.getElementById('gameOverTitle').textContent = `คะแนน: ${this.survivalScore} 🏆`;
-                    
-                    const accuracy = (this.stats.correct / this.stats.total * 100).toFixed(1);
-                    const avgTime = (this.stats.totalTime / this.stats.total).toFixed(2);
-                    
-                    document.getElementById('finalAccuracy').textContent = accuracy + '%';
-                    document.getElementById('finalAvgTime').textContent = avgTime + 's';
-                    document.getElementById('finalMaxCombo').textContent = this.stats.maxCombo;
-                    document.getElementById('finalCorrect').textContent = this.stats.correct;
-                    
-                    document.getElementById('gameOverScreen').classList.add('active');
-                }, 1000);
-            }
         }
 
-        // Initialize Game
-        const game = new Game();
-    </script>
+        questionBox.innerText = qText;
+        startTimer(timeLimit);
+    }
+
+    function startTimer(seconds) {
+        clearInterval(timerInterval);
+        timeLeft = seconds;
+        let total = seconds;
+        timerInterval = setInterval(() => {
+            timeLeft -= 0.1;
+            let percent = (timeLeft / total) * 100;
+            timerBar.style.width = percent + "%";
+            
+            if (timeLeft <= 0) {
+                fail();
+            }
+        }, 100);
+    }
+
+    function fail() {
+        hp--;
+        combo = 0;
+        updateUI();
+        statusText.innerText = "[ ALERT: FIREWALL DETECTED ERROR! ]";
+        document.body.classList.add('glitch');
+        setTimeout(() => document.body.classList.remove('glitch'), 300);
+        
+        if (hp <= 0) {
+            endGame();
+        } else {
+            nextLevel();
+        }
+    }
+
+    function updateUI() {
+        hpDisplay.innerHTML = "💗".repeat(hp) + "<span class='lost'>" + "💔".repeat(3-hp) + "</span>";
+        comboDisplay.innerText = combo;
+        levelDisplay.innerText = `LVL: ${level < 10 ? '0' + level : level}`;
+    }
+
+    function nextLevel() {
+        level++;
+        ansInput.value = "";
+        generateTask();
+    }
+
+    function endGame() {
+        gameActive = false;
+        clearInterval(timerInterval);
+        questionBox.innerText = "CONNECTION TERMINATED";
+        statusText.innerText = `[ FINAL LEVEL: ${level} | SCORE: ${level * 100 + combo * 10} ]`;
+        ansInput.placeholder = "RELOAD TO RE-TRY";
+        ansInput.disabled = true;
+    }
+
+    ansInput.addEventListener('keyup', (e) => {
+        if (!gameActive) {
+            gameActive = true;
+            generateTask();
+            return;
+        }
+
+        if (parseInt(ansInput.value) === currentAns) {
+            combo++;
+            statusText.innerText = "[ ACCESS GRANTED: BYPASSING... ]";
+            nextLevel();
+            updateUI();
+        }
+    });
+
+    // Start
+    updateUI();
+</script>
+
 </body>
 </html>
-```
