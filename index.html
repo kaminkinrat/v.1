@@ -2,276 +2,905 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PINK_X : THE CORE BREACH</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Hacker Wolf: Quantum Deception – Ultimate Edition</title>
     <style>
         :root {
-            --pink: #ff007f;
-            --dark-pink: #4d0026;
-            --black: #0a0a0a;
-            --glow: 0 0 10px #ff007f, 0 0 20px #ff007f;
+            --neon-green: #0f0;
+            --neon-cyan: #0ff;
+            --neon-red: #f00;
+            --neon-purple: #bc13fe;
+            --bg-dark: #050510;
+            --panel-bg: rgba(10, 15, 30, 0.85);
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: 1px solid rgba(0, 255, 255, 0.3);
+            --font-main: 'Courier New', Courier, monospace;
         }
 
+        * { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        
         body {
-            background-color: var(--black);
-            color: var(--pink);
-            font-family: 'Courier New', Courier, monospace;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-dark);
+            color: var(--neon-green);
+            font-family: var(--font-main);
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            overflow: hidden;
-            text-transform: uppercase;
         }
 
-        #terminal {
-            width: 90%;
+        /* --- Background Animation --- */
+        #matrix-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            opacity: 0.3;
+        }
+
+        /* --- UI Containers --- */
+        #app {
+            width: 100%;
+            height: 100%;
             max-width: 600px;
-            background: rgba(10, 10, 10, 0.9);
-            border: 2px solid var(--pink);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            z-index: 10;
+        }
+
+        .screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .screen.active { display: flex; }
+
+        /* --- Components --- */
+        .panel {
+            background: var(--panel-bg);
+            border: var(--border);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+        }
+
+        h1, h2, h3 { margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px; text-align: center; text-shadow: 0 0 5px currentColor; }
+        h1 { color: var(--neon-cyan); font-size: 1.8rem; }
+        h2 { color: var(--neon-purple); font-size: 1.4rem; }
+
+        .btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan);
+            padding: 12px 20px;
+            font-family: var(--font-main);
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            margin: 5px;
+            clip-path: polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%);
+        }
+
+        .btn:active { transform: scale(0.95); }
+        .btn:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
+        .btn.danger { border-color: var(--neon-red); color: var(--neon-red); }
+        .btn.danger:hover { background: var(--neon-red); color: #000; box-shadow: 0 0 15px var(--neon-red); }
+        .btn.secondary { border-color: var(--neon-purple); color: var(--neon-purple); }
+
+        .stat-row { display: flex; justify-content: space-between; margin: 5px 0; font-size: 0.9rem; }
+        .progress-bar { height: 6px; background: #333; margin-top: 5px; border-radius: 3px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--neon-green); width: 0%; transition: width 0.3s; }
+
+        /* --- Game Grid --- */
+        .player-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-bottom: 10px;
+        }
+
+        .player-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            border-radius: 5px;
+            padding: 8px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .player-card.selected { border-color: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }
+        .player-card.dead { opacity: 0.5; filter: grayscale(1); border-color: var(--neon-red); }
+        .player-card.self { border-color: var(--neon-green); }
+        
+        .role-icon { font-size: 1.5rem; display: block; margin-bottom: 5px; }
+        .suspicion-meter { height: 3px; background: #222; margin-top: 5px; }
+        .suspicion-val { height: 100%; background: var(--neon-red); width: 0%; }
+
+        /* --- Chat Log --- */
+        .chat-box {
+            height: 150px;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #444;
+            padding: 10px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .chat-msg { color: #aaa; }
+        .chat-msg.system { color: var(--neon-cyan); }
+        .chat-msg.alert { color: var(--neon-red); font-weight: bold; }
+        .chat-msg.hero { color: var(--neon-green); }
+
+        /* --- Math Modal --- */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             padding: 20px;
-            box-shadow: var(--glow);
+        }
+        
+        .modal.active { display: flex; animation: glitch-anim 0.3s infinite; }
+        .modal-content {
+            background: #111;
+            border: 2px solid var(--neon-green);
+            padding: 20px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
             position: relative;
         }
+        
+        .math-problem { font-size: 1.5rem; margin: 20px 0; color: #fff; letter-spacing: 2px; }
+        .timer-bar { height: 10px; background: #333; width: 100%; margin-bottom: 15px; }
+        .timer-fill { height: 100%; background: var(--neon-red); width: 100%; transition: width 1s linear; }
 
-        .header {
-            border-bottom: 1px solid var(--pink);
-            margin-bottom: 15px;
-            padding-bottom: 5px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
+        .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 20px; }
+        .num-btn { background: #222; border: 1px solid #555; padding: 15px; font-size: 1.2rem; color: #fff; }
+        .num-btn:active { background: #444; }
+
+        /* --- Card/Gacha --- */
+        .card-reveal {
+            width: 200px; height: 300px;
+            background: #111;
+            border: 2px solid;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            margin: 20px auto;
+            animation: flip 1s ease;
         }
+        .rarity-common { border-color: #fff; color: #fff; box-shadow: 0 0 5px #fff; }
+        .rarity-rare { border-color: var(--neon-cyan); color: var(--neon-cyan); box-shadow: 0 0 10px var(--neon-cyan); }
+        .rarity-legendary { border-color: var(--neon-purple); color: var(--neon-purple); box-shadow: 0 0 20px var(--neon-purple); }
 
-        .status-bar {
-            font-size: 0.8rem;
-            margin-bottom: 15px;
-            color: #ffb3d9;
-        }
-
-        #display-area {
-            min-height: 150px;
-            margin-bottom: 20px;
-        }
-
-        .task-box {
-            background: var(--dark-pink);
-            padding: 15px;
-            border-left: 5px solid var(--pink);
-            font-size: 1.5rem;
-            margin: 10px 0;
-            text-align: center;
-        }
-
-        input {
-            background: transparent;
-            border: none;
-            border-bottom: 2px solid var(--pink);
-            color: var(--pink);
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 1.5rem;
-            width: 100%;
-            outline: none;
-            text-align: center;
-        }
-
-        .stats {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        #timer-bar {
-            height: 5px;
-            background: var(--pink);
-            width: 100%;
-            transition: width 0.1s linear;
-        }
-
-        .hp-heart { color: var(--pink); }
-        .lost { color: #333; }
-
-        .glitch {
-            animation: glitch 0.3s infinite;
-        }
-
-        @keyframes glitch {
-            0% { transform: translate(0); }
-            20% { transform: translate(-2px, 2px); }
-            40% { transform: translate(-2px, -2px); }
-            60% { transform: translate(2px, 2px); }
-            80% { transform: translate(2px, -2px); }
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes glitch-anim { 
+            0% { transform: translate(0); } 
+            20% { transform: translate(-2px, 2px); } 
+            40% { transform: translate(-2px, -2px); } 
+            60% { transform: translate(2px, 2px); } 
+            80% { transform: translate(2px, -2px); } 
             100% { transform: translate(0); }
         }
+        @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } 100% { transform: translateX(0); } }
+        
+        .shake { animation: shake 0.3s; }
+        .glitch-text { position: relative; }
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text); position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        }
+        .glitch-text::before { left: 2px; text-shadow: -1px 0 red; clip: rect(24px, 550px, 90px, 0); animation: glitch-anim 3s infinite linear alternate-reverse; }
+        .glitch-text::after { left: -2px; text-shadow: -1px 0 blue; clip: rect(85px, 550px, 140px, 0); animation: glitch-anim 2s infinite linear alternate-reverse; }
+
+        /* --- Sudden Death --- */
+        .sudden-death-mode { border: 2px solid var(--neon-red); box-shadow: inset 0 0 20px var(--neon-red); }
     </style>
 </head>
 <body>
 
-<div id="terminal">
-    <div class="header">
-        <span>> PINK_X_OS v1.0.4</span>
-        <span id="level-display">LVL: 01</span>
-    </div>
-    
-    <div class="status-bar" id="status-text">
-        [ SYSTEM STATUS: READY TO INJECT ]
+    <canvas id="matrix-canvas"></canvas>
+
+    <div id="app">
+        
+        <!-- === MAIN MENU === -->
+        <div id="screen-menu" class="screen active">
+            <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <h1 class="glitch-text" data-text="HACKER WOLF">HACKER WOLF</h1>
+                <h2 style="font-size: 1rem; opacity: 0.8;">QUANTUM DECEPTION</h2>
+                <div style="margin: 20px 0; font-size: 0.8rem; color: #888;">ULTIMATE EDITION</div>
+                
+                <button class="btn" onclick="game.startMatch()">เชื่อมต่อเซิร์ฟเวอร์ (เริ่มเกม)</button>
+                <button class="btn secondary" onclick="ui.showScreen('screen-cards')">คลังข้อมูล & กาชา</button>
+                <button class="btn secondary" onclick="ui.showScreen('screen-stats')">สถิติ & อันดับ</button>
+                
+                <div class="panel" style="margin-top: 30px; width: 100%;">
+                    <div style="text-align: center; color: var(--neon-purple);">สถานะผู้เล่น</div>
+                    <div class="stat-row"><span>ยศ (Rank):</span> <span id="menu-rank">Script Kiddie</span></div>
+                    <div class="stat-row"><span>เครดิต (Coins):</span> <span id="menu-coins">0</span></div>
+                </div>
+            </div>
+            <div style="text-align: center; font-size: 0.7rem; color: #555;">v1.0.0 // System Ready</div>
+        </div>
+
+        <!-- === GAMEPLAY === -->
+        <div id="screen-game" class="screen">
+            <div class="panel" style="padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span id="game-phase" style="color: var(--neon-cyan); font-weight: bold;">PREPARING...</span>
+                    <div style="font-size: 0.7rem;">ROUND: <span id="game-round">1</span></div>
+                </div>
+                <div style="text-align: right;">
+                    <div id="my-role-display" style="color: var(--neon-green);">???</div>
+                    <div style="font-size: 0.7rem;">Suspicion: <span id="my-sus">0</span>%</div>
+                </div>
+            </div>
+
+            <div class="chat-box" id="chat-log">
+                <!-- Chat messages go here -->
+            </div>
+
+            <div class="player-grid" id="player-grid">
+                <!-- Players generated here -->
+            </div>
+
+            <div class="panel" id="action-panel" style="display: flex; gap: 5px; flex-wrap: wrap; justify-content: center;">
+                <button class="btn secondary" id="btn-bluff" onclick="game.actionBluff()">BLUFF (โกหก)</button>
+                <button class="btn" id="btn-vote" onclick="game.actionVote()">VOTE / ACTION</button>
+                <button class="btn danger" onclick="game.quitGame()">DISCONNECT</button>
+            </div>
+        </div>
+
+        <!-- === GACHA/CARDS === -->
+        <div id="screen-cards" class="screen">
+            <h2>คลังข้อมูล (Inventory)</h2>
+            <div class="panel" style="text-align: center;">
+                <div style="margin-bottom: 10px;">เครดิต: <span id="card-coins">0</span></div>
+                <button class="btn" onclick="gachaSystem.openPack()">ถอดรหัสข้อมูล (100 เครดิต)</button>
+                <button class="btn secondary" onclick="ui.showScreen('screen-menu')">กลับ</button>
+            </div>
+            <div id="card-list" style="overflow-y: auto; flex: 1; padding: 10px;"></div>
+        </div>
+
+        <!-- === STATS === -->
+        <div id="screen-stats" class="screen">
+            <h2>สถิติแฮกเกอร์</h2>
+            <div class="panel" id="stats-content"></div>
+            <button class="btn secondary" onclick="ui.showScreen('screen-menu')">กลับ</button>
+        </div>
+
     </div>
 
-    <div id="display-area">
-        <div id="msg">ยินดีต้อนรับเข้าสู่ Mainframe 01... เตรียมรับ Code ชุดแรก!</div>
-        <div class="task-box" id="question-box">READY?</div>
-        <div id="timer-container">
-            <div id="timer-bar"></div>
+    <!-- === MODALS === -->
+    
+    <!-- Math Modal -->
+    <div id="modal-math" class="modal">
+        <div class="modal-content">
+            <h3 style="color: var(--neon-cyan);">SECURITY CHECK</h3>
+            <div style="font-size: 0.8rem; color: #888;">แก้สมการเพื่อยืนยันตัวตน</div>
+            <div class="timer-bar"><div class="timer-fill" id="math-timer"></div></div>
+            <div class="math-problem" id="math-display">2 + 2 = ?</div>
+            <input type="number" id="math-input" style="width: 100%; padding: 10px; background: #000; color: #fff; border: 1px solid #555; font-size: 1.2rem; text-align: center;" placeholder="ใส่คำตอบ...">
+            <div class="numpad" id="numpad">
+                <!-- JS will fill numpad -->
+            </div>
+            <div style="margin-top: 20px; color: var(--neon-red); display: none;" id="math-error">ACCESS DENIED</div>
         </div>
     </div>
 
-    <input type="number" id="ans-input" placeholder="DECRYPT HERE..." autofocus>
-
-    <div class="stats">
-        <div>HP: <span id="hp-display">💗💗💗</span></div>
-        <div>COMBO: x<span id="combo-display">0</span></div>
+    <!-- Gacha Reveal Modal -->
+    <div id="modal-gacha" class="modal" onclick="this.style.display='none'">
+        <div class="modal-content" style="background: transparent; border: none;">
+            <div id="gacha-result"></div>
+            <div style="margin-top: 20px; color: #fff; animation: blink 1s infinite;">แตะเพื่อปิด</div>
+        </div>
     </div>
-</div>
+
+    <!-- Alert Modal -->
+    <div id="modal-alert" class="modal">
+        <div class="modal-content">
+            <h3 id="alert-title">MESSAGE</h3>
+            <p id="alert-msg">Details...</p>
+            <button class="btn" onclick="document.getElementById('modal-alert').style.display='none'">ตกลง</button>
+        </div>
+    </div>
 
 <script>
-    let level = 1;
-    let hp = 3;
-    let combo = 0;
-    let currentAns = 0;
-    let timeLeft = 10;
-    let timerInterval;
-    let gameActive = false;
+/**
+ * HACKER WOLF - ULTIMATE EDITION
+ * Core Logic & Systems
+ */
 
-    const questionBox = document.getElementById('question-box');
-    const ansInput = document.getElementById('ans-input');
-    const hpDisplay = document.getElementById('hp-display');
-    const comboDisplay = document.getElementById('combo-display');
-    const levelDisplay = document.getElementById('level-display');
-    const statusText = document.getElementById('status-text');
-    const timerBar = document.getElementById('timer-bar');
+// --- CONFIG & CONSTANTS ---
+const ROLES = {
+    WHITE_HAT: { id: 'white_hat', name: 'White Hat (ชาวบ้าน)', team: 'GOOD' },
+    BLACK_HAT: { id: 'black_hat', name: 'Black Hat (หมาป่า)', team: 'BAD' },
+    ANALYST:   { id: 'analyst',   name: 'Analyst (ผู้หยั่งรู้)', team: 'GOOD' },
+    FIREWALL:  { id: 'firewall',  name: 'Firewall (ผู้คุ้มกัน)', team: 'GOOD' },
+    VIRUS:     { id: 'virus',     name: 'Virus Coder (ตัวป่วน)', team: 'NEUTRAL' }
+};
 
-    function generateTask() {
-        let modes = ['overclock'];
-        if (level >= 3) modes.push('root');
-        if (level >= 5) modes.push('binary', 'modular');
-        
-        let mode = modes[Math.floor(Math.random() * modes.length)];
-        let qText = "";
-        
-        // Adaptive Difficulty
-        let maxNum = level * 5 + 10;
-        let timeLimit = level <= 5 ? 10 : (level <= 10 ? 7 : 5);
+const RANKS = [
+    { name: 'Script Kiddie', minElo: 0 },
+    { name: 'Packet Sniffer', minElo: 500 },
+    { name: 'Code Runner', minElo: 1000 },
+    { name: 'Cipher Master', minElo: 1500 },
+    { name: 'Shadow Architect', minElo: 2000 }
+];
 
-        switch(mode) {
-            case 'binary':
-                let b1 = Math.floor(Math.random() * 10);
-                let b2 = Math.floor(Math.random() * 5);
-                qText = `[BINARY PULSE] ${b1.toString(2)} + ${b2.toString(2)} (BASE 10)`;
-                currentAns = b1 + b2;
-                break;
-            case 'root':
-                let r = Math.floor(Math.random() * 15) + 2;
-                if(Math.random() > 0.5) {
-                    qText = `[SQUARE ROOT VIRUS] √${r*r}`;
-                    currentAns = r;
-                } else {
-                    qText = `[OVERCLOCK POWER] ${r}^2`;
-                    currentAns = r*r;
-                }
-                break;
-            case 'modular':
-                let n1 = Math.floor(Math.random() * 100) + 20;
-                let n2 = Math.floor(Math.random() * 9) + 2;
-                qText = `[MODULAR BREACH] ${n1} mod ${n2}`;
-                currentAns = n1 % n2;
-                break;
-            default:
-                let a = Math.floor(Math.random() * maxNum);
-                let b = Math.floor(Math.random() * maxNum);
-                let c = Math.floor(Math.random() * 10);
-                if (level < 6) {
-                    qText = `[DECRYPT] ${a} + ${b}`;
-                    currentAns = a + b;
-                } else {
-                    qText = `[OVERCLOCKED] (${a} + ${b}) - ${c}`;
-                    currentAns = (a + b) - c;
-                }
+// --- STATE MANAGEMENT ---
+const state = {
+    player: {
+        elo: 1000,
+        coins: 500,
+        inventory: [], // IDs of cards
+        stats: { wins: 0, matches: 0, accuracy: 0, bluffSuccess: 0 }
+    },
+    game: {
+        active: false,
+        round: 1,
+        phase: 'SETUP', // SETUP, DAY, NIGHT, RESULT
+        players: [],
+        myIndex: -1,
+        selectedTarget: null,
+        mathMode: 'NORMAL', // NORMAL, BLUFF, DEFENSE, ATTACK, SUDDEN_DEATH
+        timer: null,
+        difficulty: 1,
+        log: []
+    }
+};
+
+// --- SAVE SYSTEM ---
+const saveSystem = {
+    save: () => localStorage.setItem('hw_save', JSON.stringify(state.player)),
+    load: () => {
+        const data = localStorage.getItem('hw_save');
+        if (data) state.player = { ...state.player, ...JSON.parse(data) };
+    }
+};
+saveSystem.load();
+
+// --- MATH ENGINE ---
+class MathEngine {
+    static generate(level) {
+        // Level 1: Basic Arithmetic
+        if (level <= 1) {
+            const ops = ['+', '-', '*'];
+            const op = ops[Math.floor(Math.random() * ops.length)];
+            const a = Math.floor(Math.random() * 20) + 1;
+            const b = Math.floor(Math.random() * 10) + 1;
+            return { q: `${a} ${op} ${b}`, a: eval(`${a} ${op} ${b}`) };
         }
+        // Level 2: Linear Eq (ax + b = c)
+        else if (level === 2) {
+            const x = Math.floor(Math.random() * 10) + 1;
+            const a = Math.floor(Math.random() * 5) + 2;
+            const b = Math.floor(Math.random() * 20) + 1;
+            const c = a * x + b;
+            return { q: `${a}x + ${b} = ${c}, x = ?`, a: x };
+        }
+        // Level 3: Quadratics / Complex
+        else if (level >= 3) {
+            const type = Math.random();
+            if (type < 0.5) {
+                 // x^2 = a
+                 const base = Math.floor(Math.random() * 12) + 1;
+                 const sq = base * base;
+                 return { q: `√${sq} = ?`, a: base };
+            } else {
+                // Modular Arithmetic: a mod b
+                const b = Math.floor(Math.random() * 5) + 3;
+                const a = Math.floor(Math.random() * 20) + 10;
+                const ans = a % b;
+                return { q: `${a} mod ${b} = ?`, a: ans };
+            }
+        }
+    }
+}
 
-        questionBox.innerText = qText;
-        startTimer(timeLimit);
+// --- CARD SYSTEM ---
+const CARDS = [
+    { id: 'c1', name: 'CPU Overclock', desc: 'เวลาคิดเลข +2 วินาที', rarity: 'common' },
+    { id: 'c2', name: 'VPN Tunnel', desc: 'เริ่มเกมด้วยความสงสัย 0%', rarity: 'rare' },
+    { id: 'c3', name: 'Brute Force', desc: 'พลังโจมตี Vote x1.5', rarity: 'legendary' },
+    { id: 'c4', name: 'Logic Bomb', desc: 'ถ้าตอบผิด โอกาสรอด 20%', rarity: 'rare' },
+    { id: 'c5', name: 'Encryption Key', desc: 'Bluff สำเร็จง่ายขึ้น 10%', rarity: 'common' }
+];
+
+const gachaSystem = {
+    openPack: () => {
+        if (state.player.coins < 100) { alert('เครดิตไม่พอ!'); return; }
+        state.player.coins -= 100;
+        
+        // Gacha logic
+        const roll = Math.random();
+        let rarity = 'common';
+        if (roll > 0.95) rarity = 'legendary';
+        else if (roll > 0.7) rarity = 'rare';
+
+        const pool = CARDS.filter(c => c.rarity === rarity);
+        const card = pool[Math.floor(Math.random() * pool.length)];
+        
+        // Add to inventory if not exist (or stack) - simple version just adds
+        state.player.inventory.push(card.id);
+        saveSystem.save();
+        ui.updateMenu();
+        
+        // Show Reveal
+        const modal = document.getElementById('modal-gacha');
+        const resDiv = document.getElementById('gacha-result');
+        resDiv.innerHTML = `
+            <div class="card-reveal rarity-${rarity}">
+                <h3 style="margin-top: auto;">${card.name}</h3>
+                <div style="font-size:3rem;">💾</div>
+                <p style="padding:10px; font-size:0.8rem;">${card.desc}</p>
+                <div style="margin-bottom: auto; font-size: 0.7rem; text-transform: uppercase;">${rarity}</div>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    }
+};
+
+// --- GAME LOGIC ---
+class GameController {
+    constructor() {
+        this.names = ["Cipher", "Neo", "Trinity", "Ghost", "Viper", "Glitch", "Byte", "Zero"];
     }
 
-    function startTimer(seconds) {
-        clearInterval(timerInterval);
-        timeLeft = seconds;
-        let total = seconds;
-        timerInterval = setInterval(() => {
-            timeLeft -= 0.1;
-            let percent = (timeLeft / total) * 100;
-            timerBar.style.width = percent + "%";
-            
-            if (timeLeft <= 0) {
-                fail();
+    startMatch() {
+        // Reset State
+        state.game.active = true;
+        state.game.round = 1;
+        state.game.phase = 'SETUP';
+        state.game.log = [];
+        state.game.players = [];
+
+        // Determine Difficulty based on Rank
+        state.game.difficulty = Math.floor(state.player.elo / 500) + 1;
+
+        // Create Players (8 total: 1 Human, 7 AI)
+        const roleDeck = [
+            ROLES.BLACK_HAT, ROLES.BLACK_HAT, 
+            ROLES.ANALYST, ROLES.FIREWALL,
+            ROLES.WHITE_HAT, ROLES.WHITE_HAT, ROLES.WHITE_HAT, ROLES.VIRUS
+        ];
+        
+        // Shuffle roles
+        for (let i = roleDeck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [roleDeck[i], roleDeck[j]] = [roleDeck[j], roleDeck[i]];
+        }
+
+        // Assign to players
+        for (let i = 0; i < 8; i++) {
+            state.game.players.push({
+                id: i,
+                name: i === 0 ? "YOU (คุณ)" : this.names[i],
+                role: roleDeck[i],
+                isAlive: true,
+                suspicion: 0,
+                isProtected: false,
+                isHuman: i === 0,
+                voteCount: 0
+            });
+        }
+        
+        state.game.myIndex = 0;
+
+        ui.showScreen('screen-game');
+        ui.updateGameScreen();
+        ui.addLog("SYSTEM", "กำลังเชื่อมต่อ... เริ่มต้นภารกิจ", "system");
+        
+        // Start Cycle
+        this.nextPhase('NIGHT_TRANSITION');
+    }
+
+    nextPhase(phase) {
+        if (!state.game.active) return;
+        state.game.phase = phase;
+        ui.updateHeader();
+
+        switch(phase) {
+            case 'NIGHT_TRANSITION':
+                ui.addLog("SERVER", `เข้าสู่รอบที่ ${state.game.round} - กลางคืน (System Offline)`, "system");
+                setTimeout(() => this.resolveNight(), 2000);
+                break;
+            case 'DAY':
+                this.startDay();
+                break;
+        }
+    }
+
+    resolveNight() {
+        // Simulate Night Actions
+        const players = state.game.players;
+        let killedIndex = -1;
+
+        // Wolf Target (Simulation)
+        const aliveGood = players.filter(p => p.isAlive && p.role.team !== 'BAD');
+        if (aliveGood.length > 0) {
+            const target = aliveGood[Math.floor(Math.random() * aliveGood.length)];
+            killedIndex = target.id;
+        }
+
+        // Guard Protect (Simulation)
+        const alive = players.filter(p => p.isAlive);
+        const guarded = alive[Math.floor(Math.random() * alive.length)];
+        
+        // Resolve
+        if (killedIndex !== -1 && killedIndex !== guarded.id) {
+            players[killedIndex].isAlive = false;
+            ui.addLog("ALERT", `สัญญาณขาดหาย! ${players[killedIndex].name} ถูกตัดออกจากระบบ`, "alert");
+        } else if (killedIndex !== -1) {
+            ui.addLog("INFO", `Firewall ทำงานสำเร็จ! ไม่มีใครถูกแฮกคืนนี้`, "hero");
+        }
+
+        // Check Game Over
+        if (this.checkWinCondition()) return;
+
+        this.nextPhase('DAY');
+    }
+
+    startDay() {
+        ui.addLog("SERVER", "ระบบออนไลน์ (กลางวัน) - เริ่มการสนทนา", "system");
+        
+        // Simulate Chat
+        let chatCount = 0;
+        const maxChat = 3;
+        const chatInterval = setInterval(() => {
+            if (!state.game.active) return clearInterval(chatInterval);
+            this.generateAIChat();
+            chatCount++;
+            if (chatCount >= maxChat) {
+                clearInterval(chatInterval);
+                ui.addLog("CMD", "กรุณาเลือกผู้เล่นที่น่าสงสัยเพื่อ VOTE หรือใช้ความสามารถ", "system");
+            }
+        }, 1500);
+    }
+
+    generateAIChat() {
+        const aliveAI = state.game.players.filter(p => p.isAlive && !p.isHuman);
+        if (aliveAI.length === 0) return;
+        
+        const speaker = aliveAI[Math.floor(Math.random() * aliveAI.length)];
+        const target = state.game.players[Math.floor(Math.random() * state.game.players.length)];
+        
+        const phrases = [
+            `ผมว่า ${target.name} ดูแปลกๆ นะ`,
+            `เมื่อคืนเงียบผิดปกติ`,
+            `ขอเช็ค Log แป๊บ...`,
+            `ผมเป็น White Hat เชื่อผมเถอะ`,
+            `ใครแก้สมการช้า คนนั้นน่าสงสัย`
+        ];
+        
+        const msg = phrases[Math.floor(Math.random() * phrases.length)];
+        ui.addLog(speaker.name, msg);
+    }
+
+    actionVote() {
+        const targetId = state.game.selectedTarget;
+        if (targetId === null) {
+            alert("เลือกผู้เล่นก่อน!");
+            return;
+        }
+        state.game.mathMode = 'ATTACK';
+        this.startMathChallenge();
+    }
+
+    actionBluff() {
+        state.game.mathMode = 'BLUFF';
+        this.startMathChallenge();
+    }
+
+    startMathChallenge() {
+        // Generate Problem
+        const problem = MathEngine.generate(state.game.difficulty);
+        const modal = document.getElementById('modal-math');
+        const display = document.getElementById('math-display');
+        const timerBar = document.getElementById('math-timer');
+        const numpad = document.getElementById('numpad');
+        
+        display.textContent = problem.q;
+        document.getElementById('math-input').value = '';
+        modal.classList.add('active');
+        
+        // Setup Numpad
+        numpad.innerHTML = '';
+        [1,2,3,4,5,6,7,8,9,0].forEach(n => {
+            const btn = document.createElement('div');
+            btn.className = 'num-btn';
+            btn.textContent = n;
+            btn.onclick = () => {
+                const inp = document.getElementById('math-input');
+                inp.value += n;
+            };
+            numpad.appendChild(btn);
+        });
+        // Clear & Submit
+        const clr = document.createElement('div'); clr.className='num-btn'; clr.textContent='C'; clr.style.color='red';
+        clr.onclick = () => document.getElementById('math-input').value = '';
+        numpad.appendChild(clr);
+
+        const sub = document.createElement('div'); sub.className='num-btn'; sub.textContent='↵'; sub.style.color='var(--neon-green)';
+        sub.onclick = () => this.checkMath(problem.a);
+        numpad.appendChild(sub);
+
+        // Timer
+        let time = 100; // %
+        timerBar.style.width = '100%';
+        if (state.game.timer) clearInterval(state.game.timer);
+        
+        state.game.timer = setInterval(() => {
+            time -= 2; // Speed
+            timerBar.style.width = time + '%';
+            if (time <= 0) {
+                this.endMath(false);
             }
         }, 100);
     }
 
-    function fail() {
-        hp--;
-        combo = 0;
-        updateUI();
-        statusText.innerText = "[ ALERT: FIREWALL DETECTED ERROR! ]";
-        document.body.classList.add('glitch');
-        setTimeout(() => document.body.classList.remove('glitch'), 300);
-        
-        if (hp <= 0) {
-            endGame();
+    checkMath(correctAnswer) {
+        const userAns = parseInt(document.getElementById('math-input').value);
+        if (userAns === correctAnswer) {
+            this.endMath(true);
         } else {
-            nextLevel();
+            const display = document.getElementById('math-display');
+            display.classList.add('shake');
+            setTimeout(() => display.classList.remove('shake'), 300);
         }
     }
 
-    function updateUI() {
-        hpDisplay.innerHTML = "💗".repeat(hp) + "<span class='lost'>" + "💔".repeat(3-hp) + "</span>";
-        comboDisplay.innerText = combo;
-        levelDisplay.innerText = `LVL: ${level < 10 ? '0' + level : level}`;
+    endMath(success) {
+        clearInterval(state.game.timer);
+        document.getElementById('modal-math').classList.remove('active');
+        
+        if (success) {
+            if (state.game.mathMode === 'BLUFF') {
+                ui.addLog("YOU", "ใช้เทคนิค Social Engineering สำเร็จ! (ความสงสัยลดลง)", "hero");
+                state.game.players[0].suspicion = Math.max(0, state.game.players[0].suspicion - 20);
+                this.completeDayPhase(); // Bluff uses the turn
+            } else if (state.game.mathMode === 'ATTACK') {
+                ui.addLog("YOU", `ส่ง Payload โจมตี ${state.game.players[state.game.selectedTarget].name} สำเร็จ!`, "hero");
+                // In a real game, this would add votes. Simplified: direct elimination logic for demo
+                this.resolveVote(state.game.selectedTarget);
+            }
+        } else {
+            ui.addLog("SYSTEM", "การคำนวณล้มเหลว! เกิดข้อผิดพลาดในระบบ", "alert");
+            state.game.players[0].suspicion += 20;
+            this.completeDayPhase();
+        }
+        ui.updateGameScreen();
     }
 
-    function nextLevel() {
-        level++;
-        ansInput.value = "";
-        generateTask();
-    }
+    resolveVote(targetId) {
+        // AI random votes
+        const votes = {};
+        state.game.players.forEach(p => {
+            if (!p.isAlive) return;
+            const vote = p.isHuman ? targetId : Math.floor(Math.random() * state.game.players.length); // Simplified AI vote
+            votes[vote] = (votes[vote] || 0) + 1;
+        });
 
-    function endGame() {
-        gameActive = false;
-        clearInterval(timerInterval);
-        questionBox.innerText = "CONNECTION TERMINATED";
-        statusText.innerText = `[ FINAL LEVEL: ${level} | SCORE: ${level * 100 + combo * 10} ]`;
-        ansInput.placeholder = "RELOAD TO RE-TRY";
-        ansInput.disabled = true;
-    }
-
-    ansInput.addEventListener('keyup', (e) => {
-        if (!gameActive) {
-            gameActive = true;
-            generateTask();
-            return;
+        // Find max
+        let maxVote = 0;
+        let eliminated = -1;
+        for (const [pid, count] of Object.entries(votes)) {
+            if (count > maxVote) {
+                maxVote = count;
+                eliminated = pid;
+            }
         }
 
-        if (parseInt(ansInput.value) === currentAns) {
-            combo++;
-            statusText.innerText = "[ ACCESS GRANTED: BYPASSING... ]";
-            nextLevel();
-            updateUI();
+        if (eliminated != -1 && state.game.players[eliminated].isAlive) {
+            state.game.players[eliminated].isAlive = false;
+            const role = state.game.players[eliminated].role.name;
+            ui.addLog("SERVER", `${state.game.players[eliminated].name} ถูกโหวตให้ออกจากระบบ (Role: ${role})`, "alert");
+        } else {
+            ui.addLog("SERVER", "ผลโหวตไม่เอกฉันท์ ไม่มีใครถูกเตะ", "system");
         }
-    });
 
-    // Start
-    updateUI();
+        if (this.checkWinCondition()) return;
+        
+        state.game.round++;
+        this.nextPhase('NIGHT_TRANSITION');
+    }
+
+    completeDayPhase() {
+        // Simple bypass to vote resolution for demo flow
+        // In full version, wait for all players
+        this.resolveVote(state.game.selectedTarget || 1); 
+    }
+
+    checkWinCondition() {
+        const alive = state.game.players.filter(p => p.isAlive);
+        const wolves = alive.filter(p => p.role.team === 'BAD').length;
+        const humans = alive.length - wolves;
+
+        if (wolves === 0) {
+            this.endGame(true);
+            return true;
+        }
+        if (wolves >= humans) {
+            this.endGame(false);
+            return true;
+        }
+        if (!state.game.players[0].isAlive) {
+            this.endGame(false);
+            return true;
+        }
+        return false;
+    }
+
+    endGame(win) {
+        state.game.active = false;
+        const bonus = win ? 100 : 20;
+        state.player.coins += bonus;
+        state.player.stats.matches++;
+        if (win) {
+            state.player.stats.wins++;
+            state.player.elo += 25;
+        } else {
+            state.player.elo = Math.max(0, state.player.elo - 15);
+        }
+        saveSystem.save();
+        ui.updateMenu();
+        
+        setTimeout(() => {
+            alert(win ? "MISSION ACCOMPLISHED (ชนะ)" : "SYSTEM COMPROMISED (แพ้)");
+            ui.showScreen('screen-menu');
+        }, 1000);
+    }
+    
+    quitGame() {
+        if(confirm("ตัดการเชื่อมต่อ? (คุณจะแพ้ทันที)")) {
+            this.endGame(false);
+        }
+    }
+}
+
+// --- UI CONTROLLER ---
+const ui = {
+    showScreen: (id) => {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+        if (id === 'screen-menu') ui.updateMenu();
+    },
+
+    updateMenu: () => {
+        const rank = RANKS.find(r => state.player.elo >= r.minElo) || RANKS[RANKS.length-1];
+        document.getElementById('menu-rank').innerText = `${rank.name} (${state.player.elo})`;
+        document.getElementById('menu-coins').innerText = state.player.coins;
+        document.getElementById('card-coins').innerText = state.player.coins;
+        
+        // Stats
+        const statsHtml = `
+            <div class="stat-row"><span>Matches:</span> <span>${state.player.stats.matches}</span></div>
+            <div class="stat-row"><span>Wins:</span> <span>${state.player.stats.wins}</span></div>
+            <div class="stat-row"><span>Win Rate:</span> <span>${state.player.stats.matches ? Math.round((state.player.stats.wins/state.player.stats.matches)*100) : 0}%</span></div>
+            <hr style="border-color: #333">
+            <div style="margin-top:10px;">การ์ดที่ครอบครอง: ${state.player.inventory.length} ใบ</div>
+        `;
+        document.getElementById('stats-content').innerHTML = statsHtml;
+        
+        // Cards
+        const cardList = document.getElementById('card-list');
+        cardList.innerHTML = '';
+        const uniqueCards = [...new Set(state.player.inventory)];
+        uniqueCards.forEach(cid => {
+            const cData = CARDS.find(c => c.id === cid);
+            const div = document.createElement('div');
+            div.className = `player-card rarity-${cData.rarity}`;
+            div.style.marginBottom = '10px';
+            div.innerHTML = `<b>${cData.name}</b><br><small>${cData.desc}</small>`;
+            cardList.appendChild(div);
+        });
+    },
+
+    updateGameScreen: () => {
+        document.getElementById('game-round').innerText = state.game.round;
+        document.getElementById('my-role-display').innerText = state.game.players[0].role.name;
+        document.getElementById('my-sus').innerText = state.game.players[0].suspicion;
+        
+        const grid = document.getElementById('player-grid');
+        grid.innerHTML = '';
+        state.game.players.forEach(p => {
+            const card = document.createElement('div');
+            card.className = `player-card ${!p.isAlive ? 'dead' : ''} ${p.id === 0 ? 'self' : ''} ${state.game.selectedTarget === p.id ? 'selected' : ''}`;
+            card.innerHTML = `
+                <div class="role-icon">${p.isAlive ? '👤' : '💀'}</div>
+                <div>${p.name}</div>
+                ${p.id === 0 ? `<small>${p.role.name}</small>` : ''}
+                <div class="suspicion-meter"><div class="suspicion-val" style="width: ${p.suspicion}%"></div></div>
+            `;
+            if (p.isAlive && p.id !== 0) {
+                card.onclick = () => {
+                    state.game.selectedTarget = p.id;
+                    ui.updateGameScreen();
+                };
+            }
+            grid.appendChild(card);
+        });
+    },
+
+    updateHeader: () => {
+        document.getElementById('game-phase').innerText = state.game.phase;
+    },
+
+    addLog: (sender, msg, type = "") => {
+        const box = document.getElementById('chat-log');
+        const div = document.createElement('div');
+        div.className = `chat-msg ${type}`;
+        div.innerHTML = `[${sender}]: ${msg}`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+    }
+};
+
+// --- MATRIX RAIN BACKGROUND ---
+const canvas = document.getElementById('matrix-canvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+const fontSize = 14;
+const columns = canvas.width / fontSize;
+const drops = Array(Math.floor(columns)).fill(1);
+
+function drawMatrix() {
+    ctx.fillStyle = 'rgba(5, 5, 16, 0.1)'; // Fade effect
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    ctx.fillStyle = '#0f0';
+    ctx.font = fontSize + 'px monospace';
+    
+    for(let i = 0; i < drops.length; i++) {
+        const text = letters.charAt(Math.floor(Math.random() * letters.length));
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+        
+        if(drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+            drops[i] = 0;
+        }
+        drops[i]++;
+    }
+    requestAnimationFrame(drawMatrix);
+}
+drawMatrix();
+
+// --- INIT ---
+const game = new GameController();
+ui.updateMenu();
+
 </script>
-
 </body>
 </html>
