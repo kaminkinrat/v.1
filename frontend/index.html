@@ -307,22 +307,25 @@ th {
     background: #ffa6d2;
 }
 
-/* รูปคน */
 .person-img {
-    width: 850px;          /* ขยายให้ใหญ่ขึ้น */
-    max-width: 90%;        /* กันล้นจอ */
-    margin-top: 35px;
-    opacity: 1;            /* เอาความจางออกให้ชัด */
-    
-    image-rendering: auto; /* ให้ browser แสดงผลปกติ */
+    position: fixed;     /* ลอยอิสระ */
+    top: 20px;           /* ระยะจากด้านบน */
+    right: 30px;         /* ระยะจากด้านขวา */
+
+    width: 350px;
+    max-width: 30vw;
+
+    opacity: 1;
     object-fit: contain;
 
-    filter: drop-shadow(0 10px 25px rgba(255,182,218,0.35));
-
-    animation: floatSoft 4s ease-in-out infinite;
     filter: drop-shadow(0 10px 25px rgba(255,182,218,0.35)) contrast(105%);
 
+    animation: floatSoft 4s ease-in-out infinite;
+
+    z-index: 1;          /* ให้อยู่เหนือพื้นหลัง */
+    pointer-events: none; /* ไม่บังปุ่ม */
 }
+
 
 
 /* เครดิตล่างขวา */
